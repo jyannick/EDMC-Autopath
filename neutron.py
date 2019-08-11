@@ -2,19 +2,25 @@ import Tkinter as tk
 import pyperclip
 from neutronplotter import NeutronPlotter
 import math
+from config import config
+try:
+    from EDMCOverlay import edmcoverlay
+except ImportError:  ## test mode
+    edmcoverlay = None
 
 
 class Neutron(tk.Frame):
 
     def __init__(self, master, global_data, **kw):
         tk.Frame.__init__(self, master, **kw)
+        self.overlay = None
         self.globals = global_data
         self.globals.neutron = self
         self.plotter = NeutronPlotter(self.globals)
         self.route_ready = False
         self.setup()
 
-    def update_clipboard(self, arrived_to):
+    def update_location(self, arrived_to):
         self.globals.logger.debug("Neutron -> Updating system clipboard")
         # Check none
         if self.checkbox_status is not None or self.checkbox_clipboard is None:
@@ -32,6 +38,8 @@ class Neutron(tk.Frame):
                     self.status_append(self.route[index + 1])
                     self.status_append("")
                     self.status_append("{}/{} ({:.2f}%)".format(index+1, total, percent))
+                    if config.getint("autopath_overlay"):
+                        self.display_overlay("Waypoint reached: {}/{} ({:.2f}%)".format(index + 1, total, percent))
                 except Exception as e:
                     print(e)
                     self.globals.logger.debug("Neutron -> clipboard update failed > {}".format(str(e)))
@@ -49,7 +57,17 @@ class Neutron(tk.Frame):
             self.label_status["text"] = status_text
             self.label_status.update()
 
+    def display_overlay(self, message, timeout_seconds=15):
+        if self.overlay is None:
+            self.overlay = edmcoverlay.Overlay()
+        try:
+            self.overlay.send_message("Neutron", message, "#aaf9ff", x=520, y=120, ttl=timeout_seconds, size="large")
+            self.globals.logger.debug("Neutron -> displayed overlay message: {}".format(message))
+        except Exception as err:
+            self.globals.logger.debug("Neutron -> failed to connect to overlay: {}".format(err))
+
     def calculate_path(self):
+        self.display_overlay("Calculating route...", 5)
         self.globals.logger.debug("Neutron -> calculating path")
         origin = self.entry_origin.get()
         dest = self.entry_destination.get()
@@ -111,7 +129,7 @@ class Neutron(tk.Frame):
             self.update_status("Route calculated..")
             self.route_ready = True
             # simulate arrive to origin system
-            self.update_clipboard(self.route[0])
+            self.update_location(self.route[0])
         else:
             self.globals.logger.debug("Neutron -> Route is less than one system away = destination is origin (error)")
             self.update_status("ERROR: Route has less than one system")

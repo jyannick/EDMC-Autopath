@@ -56,16 +56,16 @@ class MainGUI(tk.Frame):
         """
         Creates blank GUI page
         """
-        
+
         self.globals.logger.debug("Creating GUI blank frame..")
         ID = self.BLANK_ID
-        
+
         # MENU
         # None
-        
+
         # PAGE
         self.pages[ID] = Blank(self.main_frame, self.globals)
-        
+
         self.globals.logger.debug("GUI blank frame created.")
 
     def setup_neutron(self):
@@ -176,6 +176,7 @@ class PrefGUI:
     # Storage for checkboxes
     neutron = tk.IntVar(value=config.getint('autopath_neutron'))
     riches = tk.IntVar(value=config.getint('autopath_riches'))
+    overlay = tk.IntVar(value=config.getint('autopath_overlay'))
 
     @staticmethod
     def create_gui(parent, update_func, globals):
@@ -213,6 +214,14 @@ class PrefGUI:
         riches_button.grid(columnspan=2, padx=PrefGUI.BUTTONX, pady=(5, 0), sticky=tk.W)
         globals.logger.debug("Settings neutron plotter created")
 
+        # Checkbox for Overlay
+        globals.logger.debug("Creating settings overlay checkbox")
+        overlay_button = nb.Checkbutton(frame, text=_('Use EDMCOverlay (if installed)'), variable=PrefGUI.overlay,
+                                          command=lambda update_func=update_func: PrefGUI.prefs_changed(update_func,
+                                                                                                        globals))
+        overlay_button.grid(columnspan=2, padx=PrefGUI.BUTTONX, pady=(5, 0), sticky=tk.W)
+        globals.logger.debug("Settings overlay created")
+
         return frame
 
     @staticmethod
@@ -225,10 +234,11 @@ class PrefGUI:
         globals.logger.debug("Saving settings..")
         config.set("autopath_neutron", PrefGUI.neutron.get())
         config.set("autopath_riches",  PrefGUI.riches.get())
+        config.set("autopath_overlay", PrefGUI.overlay.get())
         globals.logger.debug("Settings saved.")
-        
+
         globals.logger.debug("Trying to invoke GUI update function.")
-        
+
         if update_func is not None and isinstance(update_func, types.FunctionType):
             globals.logger.debug("Calling GUI update function...")
             update_func()
