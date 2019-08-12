@@ -5,7 +5,7 @@ import os
 
 # Plugin name
 PLUGIN_NAME = 'Autopath'
-DEBUG = False
+DEBUG = True
 ROLL_LOGS = False
 
 # For holding module globals
