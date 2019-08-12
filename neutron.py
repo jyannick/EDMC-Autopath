@@ -24,13 +24,13 @@ class Neutron(tk.Frame):
         if self.route_ready:
             self.globals.logger.debug("Neutron -> Route is ready")
             index = self.route.index(arrived_to)
-            total = len(self.route)
-            percent = float(float(((index + 1)) / float(total)) * float(100))
-            percent = math.floor(percent * 100) / 100.0
+            total_waypoints = len(self.route)
+            total_legs = total_waypoints - 1
+            percent = 100 * index // total_legs
             self.update_status("Clipboard updated to: ")
             self.status_append(self.route[index + 1])
             self.status_append("")
-            self.status_append("{}/{} ({:.2f}%)".format(index + 1, total, percent))
+            self.status_append("Leg {}/{} ({:.2f}%)".format(index+1, total_legs, percent))
 
             if config.getint("autopath_clipboard"):
                 self.globals.logger.debug("Neutron -> Route is ready and clipboard checkbox is checked")
@@ -42,7 +42,7 @@ class Neutron(tk.Frame):
                     self.globals.logger.debug("Neutron -> clipboard update failed > {}".format(str(e)))
                     pass
             if config.getint("autopath_overlay"):
-                self.display_overlay("Waypoint reached: {}/{} ({:.2f}%)".format(index + 1, total, percent))
+                self.display_overlay("Waypoint reached: {}/{} ({:.2f}%)".format(index + 1, total_legs, percent))
 
 
     def status_append(self, status_text):
