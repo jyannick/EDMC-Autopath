@@ -26,7 +26,9 @@ class Neutron(tk.Frame):
             index = self.route.index(arrived_to)
             total_waypoints = len(self.route)
             total_legs = total_waypoints - 1
-            percent = 100 * index // total_legs
+            remaining_jumps = sum(self.jumps_per_leg[index+1:-1])
+            self.globals.logger.debug("Neutron -> Remaining jumps: %d" % remaining_jumps)
+            percent = 100 * ( 1 - remaining_jumps // self.total_jumps)
             self.update_status("Clipboard updated to: ")
             self.status_append(self.route[index + 1])
             self.status_append("")
@@ -122,6 +124,11 @@ class Neutron(tk.Frame):
             self.globals.logger.debug("Neutron -> system found {}".format(record["system"]))
             self.route.append(record["system"])
 
+        # Process json for number of jumps
+        self.total_jumps = int(route["result"]["total_jumps"])
+        self.jumps_per_leg = list()
+        for record in route["result"]["system_jumps"]:
+            self.jumps_per_leg.append(record["jumps"])
 
         # Mark as ready
         if len(self.route) > 0:
